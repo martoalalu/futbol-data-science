@@ -1,0 +1,474 @@
+---
+title: "Introduccion a visualizaciones en R y fútbol"
+subtitle: "Ciencia de Datos y Fútbol"
+author: "Martín Alalú"
+output: 
+  html_document:
+    fig_height: 8
+    fig_width: 12
+    #code_folding: "hide"
+    toc: true
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: paper
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introducción
+
+
+Una de las herramientas sumamente poderosas que todo cientista de datos debe poder dominar es la de visualización de datos ya que tiene importantes ventajas no sólo en la etapa final de comunicación, sino también en la etapa de exploración y análisis también. Construir visualizaciones buenas y efectivas nos ayuda a explorar, a encontrar patrones que en una tabla nos sería díficil de hallar, a comprender diversos aspectos de la estructura subyacente en los datos, pero por sobre todas las cosas una buena forma de visualizar los datos ayuda enormemente a transmitir conceptos complejos a públicos que seguramente no estén tan acostumbrado al lenguaje propio de los datos.
+
+En R la librería por excelencia para hacer visualizaciones se llama **ggplot** y en esta clase aprenderemos a utilizarla y conocer todo su potencial al momento de explorar y querer comunicar los resultados de los análisis.
+
+Vayamos paso a paso.
+
+# Conociendo los datos
+
+Como ya sabemos lo primero que tenemos que hacer antes de empezar cualquier análisis es cargar las librerías que usaremos con el comando **library()**.
+En esta clase usaremos **ggplot2** (la nueva versión de ggplot) y la ya conocida **tidyverse**.
+
+
+```{r Cargo librerias, echo=TRUE, message=FALSE}
+# Recuerden siempre que si es la primera vez que van a usar una librería deben instalarla con el comando "install.packages("nombre_de_la_libreria")"
+library(tidyverse)
+library(ggplot2)
+```
+
+Luego cargamos los datos. En esta ocasión vamos a trabajar con un _dataset_ que tiene información sobre partidos de todos los equipos de primera división de todas las ligas de sudamérica durante los últimos 5 años.
+Para leer los datos usamos **read.csv()** indicandole la ruta o el directorio donde tenemos guardado el archivo y lo guardamos como un objeto nuevo con el nombre de _df_.
+
+```{r, echo=TRUE, message=FALSE}
+
+df <- read.csv("C:/Users/Marto/DataScience/futbol/data/df_america.csv") 
+```
+
+Una buena práctica antes de querer hacer un gráfico o comenzar un análisis de datos es entender las principales características de los datos con los que trabajaremos.
+Para ellos las funciones **str**, **head** y **summary** son muy útiles.
+
+Vamos a inspeccionar la estructura básica del archivo.
+
+```{r, echo=TRUE, message=FALSE}
+str(df)
+```
+
+Se trata de un _dataframe_ que tiene 37209 observaciones, o "filas" y 14 variables, o "columnas".
+Usaremos el comando "head" para hechar un primer vistazo a los datos y darnos una idea más concreta de qué tenemos.
+
+```{r, echo=TRUE, message=FALSE}
+ head(df)
+```
+
+Ahí va más claro. Para determinado equipo el dataframe tiene info sobre el país al que pertenece y los partidos que jugó, indicando la fecha y el año del partido, el resultado (si ganó, empató o perdió), la formación que utilizó, si fue local o visitante, el porcentaje de posesión y los goles que hizo.
+
+Sigamos haciendo un análisis muy a vuelo de pájaro aprovechando la función **summary()**.
+
+```{r, echo=TRUE, message=FALSE}
+summary(df)
+```
+
+Al ver la columna "year" podemos darnos cuenta que hay datos desde el 2015 al 2020, en "possession_percent" vemos que la posesión mínima de un equipo fue de apenas el 17,66% mientras que la máxima de un 82,34% y que la cantidad máxima de goles que hizo un equipo fue 11, y un equipo pateó 53 veces al arco!
+
+Practiquemos un poco los comandos básicos de **tidyverse** que vimos la clase pasada y saquemosnos la duda de cuáles fueron estos equipos.
+
+Veamos la posesión máxima y la mínima usando **filter**
+
+```{r, echo=TRUE, message=FALSE}
+#Filtramos la fila que tiene la posesión mínima
+
+df %>% 
+  filter(possession_percent==17.66)
+```
+
+Chicago Fire tuvo la menor posesión en un partido jugado el 18 de Marzo de 2017, apenas 17,66%, y esta diferencia se vio plasmada en el resultado (esta vez) ya que perdió 4-0 jugando de visitante contra Atlanta United.
+
+Este partido fue en el que más diferencia de posesión hubo entre los 2 equipos en los últimos 5 años en América.
+
+Pero si queremos saber cuáles son los 3 equipos que tuvieron mayor posesión (o con menor), podemos usar la función top_n() y le indicamos la variable de interés.
+
+```{r, echo=TRUE, message=FALSE}
+#Vemos los 3 equipos con mayor posesión en un partido
+
+df %>% 
+ top_n(possession_percent, n = 3)
+```
+
+Luego de Atlanta United, Cruz Azul (81,61%) en un partido contra Monterrey (1-1) y Defensa y Justicia (81,47%) vs. Gimnasia y Tiro (1-0) fueron los otros 2 partidos con mayor diferencia de posesión.
+Lo llamativo es que en estos casos tal diferencia no se plasmó con contundencia en el marcados, de hecho Cruz Azul no pudo derrotar a Monterrey, mientras que el equipo argentino ganó por apenas un gol. 
+Bueno, tal como dijimos antes la visualización de datos es un gran aliado para la exploración, análisis y comunicación, asi que vamos a adentrarnos en el mundo de **ggplot()**, que con pocas líneas de código van a poder hacer buenos gráficos.
+
+
+# Preparando los datos
+
+
+Aprovechemos que una de las columnas indica el esquema táctico utilizado por cada equipo para analizar cuál es la formación más utilizada en cada país. ¿Hay un dibujo táctico dominante en América Latina? ¿Cuál es? ¿Varió a lo largo de los años?
+
+Para ello haremos un gráfico de barras/columnas, que es ideal para mostrar este tipo de distribuciones.
+
+Lo primero que vamos a hacer es preparar los datos.
+
+Una de las columnas indicaba el país, veamos cuál es nuestro universo usando la función **unique** que nos permite ver los valores únicos de una columna, en este caso "pais".
+
+```{r, echo=TRUE, message=FALSE}
+unique(df$pais)
+```
+
+Genial, tenemos partidos de todas las ligas principales de fútbol de América. Pero vemos que uno de los valores es "South America", filtremos para ver qué partidos son...
+
+```{r, echo=TRUE, message=FALSE}
+#Filtramos los prtidos que en la columna país deicen "South America" y contamos la cantidad para cada torneo
+
+head(df %>% 
+  filter(pais=="South America") %>% 
+    count(torneo)) 
+```
+
+Son partidos internacionales. Como acá lo que queremos es ver la formación más usada por país vamos a quedarnos solo con los partidos locales.
+
+```{r, echo=TRUE, message=FALSE}
+df_pais <- df %>% 
+  filter(pais!="South America")
+```
+
+Bien. Ahora tenemos 34.222 partidos. Sigamos.
+
+Vamos a crear una nueva tabla que va a tener para cada país una columna que indicará cuántas veces fue usada cada formación.
+
+```{r, echo=TRUE, message=FALSE}
+formaciones <- df_pais %>% 
+  count(scheme,year,pais)
+
+head(formaciones)
+```
+
+Genial. Para cada tipo de formación tenemos cuántas veces fue utilizada por país.
+
+Vayamos al gráfico ahora.
+
+# ggplot, mi buen amigo
+
+En **ggplot** las visualizaciones son creadas a partir de una serie de capas, donde la primera siempre consiste en los datos que utilizaremos para realizarlo.
+
+Lo primero que tenemos que hacer es indicarle a R que haremos un gráfico, esto lo hacemos con el comando **ggplot()**, que será la primera capa de nuestra visualización. Luego, entre parentesis le decimos qué dataframe usaremos, en este caso el recién creado **formaciones**.
+
+```{r, echo=TRUE, message=FALSE}
+ggplot(formaciones)
+```
+
+El gráfico está vacío ya que no le dijimos qué tipo de visualización haremos ni qué variables usaremos de nuestro dataframe formaciones. R necesita más información.
+
+Tal como dijimos queremos hacer un gráfico de barras/columnas, que en ggplot se llama **geom_col()**.
+Un elemento clave de ggplot es el elemento **aes** (aesthetics), las referencias estéticas que nos ayudarán a declarar qué cosas van en cada parte del gráfico, de qué tamaño, color, etc.
+Por ahora vamos con algo simple, especificandole a R lo básico, qué datos queremos en el eje X y en el Y.
+
+Queremos que el largo de cada barra (eje Y) esté en función de la cantidad de formaciones utilizadas (eje X). Por eso, en el eje Y irá la columna "n" que tiene la cantidad y en el eje X "scheme" que tiene la formación utilizada.
+
+
+```{r flair, echo=FALSE}
+library(flair)
+decorate("geom_col") %>%
+  flair("geom_col(aes(x=scheme, y=n))")
+```
+
+```{r geom_col, echo=TRUE, message=FALSE, include = FALSE}
+ggplot(formaciones)+
+  geom_col(aes(x=scheme, y=n))
+```
+
+
+Vamos bien pero falta. Sabemos que claramente hay una formación que es la más usada (más de 7500 veces!) pero no podemos saber bien cuál debido a que las etiquetas del eje X se superponen.
+En otra capa podemos aclararle a ggplot que queremos que invierta el gráfico, para eso usamos el parámetro coord_flip() y listo!
+
+```{r flair2, echo=FALSE}
+decorate("flip") %>%
+  flair("coord_flip()")
+```
+
+
+```{r flip, echo=TRUE, message=FALSE, include = FALSE}
+ggplot(formaciones) +
+  geom_col(aes(x=scheme, y=n)) +
+  coord_flip()
+```
+
+Excelente! Ahora sí, sabemos que la formación más usada fue la 4-3-2-1 seguida por las clásicas 4-4-2 y 4-3-3.
+Emprolijemos un poco el gráfico ordenando las formaciones desde la más utilizada. Entonces al declarar qué datos van en el eje X (scheme) le pedimos a ggplot que lo ordene según un valor, en este caso "n" que es la columna que tiene la cantidad de veces que esa formación fue utilizada. Esto lo hacemos con **reorder**.
+
+Además vamos a aprovechar y ponerle rellenar con color distinto a cada barra. Dentro de los atributos de aesthetics agregamos el parámetro **color** y le decimos con qué variable queremos que sea, en este caso **scheme**. 
+
+```{r flair3, echo=FALSE}
+decorate("fill") %>%
+  flair("fill=scheme)")
+```
+
+
+```{r fill, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(formaciones)+
+  geom_col(aes(x=reorder(scheme,n), y=n, fill=scheme))+
+  coord_flip()
+```
+
+Bien. Terminamos de ajustar algunos detalles y dejamos el gráfico listo.
+
+Como la referencia nueva de a qué color corresponde cada formación no tiene mucho sentido la vamos a sacar. Eso lo hacemos con **guides** y agregando "FALSE" como parámetro.
+
+Por último un aspecto clave al momento de hacer un gráfico es la comunicación, no sólo nosotros tenemos que hacer un gráfico sino cualquiera debería poder entender lo que está viendo.
+De este modo especificar un **título**, los **nombres de los ejes** y la **fuente** a partir de la cual obtuvimos la información es esencial.
+
+Con **labs** podemos hacer todo esto de modo muy fácil.
+
+```{r flair4, echo=FALSE}
+decorate("labs") %>%
+  flair("guides(fill=FALSE)+
+  labs(title = 'Formaciones más usadas en América Latina',
+       subtitle= 'Partidos de primera división de fútbol masculino 2015-2020',
+       caption = 'Fuente: Wyscout',
+               x = 'Formación',
+               y = 'Partidos')")
+```
+
+
+```{r labs, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(formaciones)+
+  geom_col(aes(x=reorder(scheme,n), y=n, fill=scheme))+
+  coord_flip()+
+  guides(fill=FALSE)+
+  labs(title = "Formaciones más usadas en América Latina",
+       subtitle= "Partidos de primera división de fútbol masculino 2015-2020",
+       caption = "Fuente: Wyscout",
+               x = "Formación",
+               y = "Partidos")
+```
+
+# Dividiendo el gráfico
+
+Imaginemos que ahora queremos saber si esta distribución de formaciones se mantiene a lo largo de los países o bien si hay variación. ¿Cómo incluirían esta nueva variable "país" al gráfico?
+
+A veces la cantidad de variables que queremos ver en un gráfico no alcanza, o incluirla agregaría más ruido y terminaría difucultando el análisis. Para poder sortear este problema ggplot() tiene una solución: facetar o _dividir_ el gráfico a partir de una variable a elección.
+
+Facetar nos permite mostrar un mismo tipo de gráfico multiples veces según la variable que elijamos, como por ejemplo en este caso crear gráficos de barras similares como los que hicimos antes pero para cada país y así comparar los datos entre los países. ¡Y esto lo podemos hacer con sólo agregar una nueva capa al gráfico!
+
+Con **facet_wrap(~NOMBRE_VARIABLE)** le indicamos a ggplot() a partir de qué columna queremos subdividir el gráfico. Atención al símbolo **~**, es obligatorio de incluir previo al nombre de la columna.
+
+Entonces, vamos a aplicar facetado, sobre los paises asi podemos ver cuál es la formación más usada en cada uno!
+
+```{r flair5, echo=FALSE}
+decorate("facet") %>%
+  flair("facet_wrap(~pais) +")
+```
+
+
+
+```{r facet, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(formaciones) +
+  geom_col(aes(x=reorder(scheme,n), y=n, fill=scheme)) +
+  coord_flip() +
+  guides(fill=FALSE) +
+  facet_wrap(~pais) +
+  labs(title = "Formaciones más usadas en América Latina",
+       subtitle= "Partidos de primera división de fútbol masculino 2015-2020",
+       caption = "Fuente: Wyscout",
+               x = "Formación",
+               y = "Partidos")
+```
+
+Aca vamos viendo más info. 4-2-3-1 no es la formación más usada en todos los países, sino que predomina en Bolivia, Brasil, Chile, Colombia, Ecuador, Estados Unidos y Perú; mientras que la 4-4-2 ocupa el primer lugar en Arentina, México, Paraguay, Uuruguay y Venezuela.
+
+Podemos probar ahora haciendo un facetado por años, a ver si hubo en cambio a lo largo de los años.
+Lo hacemos igual, sólo cambiando la variable a facetar.
+
+```{r flair6, echo=FALSE}
+decorate("facet2") %>%
+  flair("facet_wrap(~year) +")
+```
+
+
+```{r facet2, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(formaciones) +
+  geom_col(aes(x=reorder(scheme,n), y=n, fill=scheme)) +
+  coord_flip() +
+  guides(fill=FALSE) +
+  facet_wrap(~year) +
+  labs(title = "Formaciones más usadas en América Latina",
+       subtitle= "Partidos de primera división de fútbol masculino 2015-2020",
+       caption = "Fuente: Wyscout",
+               x = "Formación",
+               y = "Partidos")
+```
+
+No se ven muchos cambios, los patrones a grandes rasgos se mantienen. Si bien tanto en 2015 como en 2020 la 4-2-3-1 predominó, tampoco es que hay muchos casos para que esto sea concluyente...
+
+Por último podemos seguir cambiando el gráfico y en vez de facetar por país lo hacemos por formación, asi podemos ver cómo se distribuye cada formación en cada país. ¿Habrá alguna formación que sea característica de un país específico?
+
+
+```{r flair7, echo=FALSE}
+decorate("facet3") %>%
+  flair("facet_wrap(~scheme) +")
+```
+
+
+```{r facet3, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(formaciones) +
+  geom_col(aes(x=reorder(pais,n), y=n, fill=pais)) +
+  coord_flip() +
+  guides(fill=FALSE) +
+  facet_wrap(~scheme) +
+  labs(title = "Formaciones más usadas en América Latina",
+       subtitle= "Partidos de primera división de fútbol masculino 2015-2020",
+       caption = "Fuente: Wyscout",
+               x = "País",
+               y = "Partidos")
+```
+
+Mmm lo único interesante parecería ser que la formación 4-1-3-2 principalmente es usada en Argentina, mientras que la 4-4-2 también, acompañada por México en segundo lugar.
+
+
+# Scatterplot y Boxplot
+
+Ahora que somos los Messi del geom_col probemos con otro tipo de gráfico para otro análisis y complejizemos un poco el asunto.
+
+Un viejo debate del fútbol gira alrededor de la posesión del balón. ¿Más posesión implica más tener más chances de gol o hacer más goles? O más aún, ¿los equipo con más posesión suelen ganar más que aquellos que tienen menos?
+
+Veamos qué dicen los datos. Para esta ocasión usaremos un nuevo tipo de gráfico, el **scatterplot** o gráfico de dispersión, que básicamente consiste en puntos que se proyectan en un eje de coordenadas (X e Y) según su valor. Este tipo de gráfico es ideal para comparar la relación entre 2 variables.
+
+Empecemos. Primero le indicamos a ggplot el dataframe que usaremos, en este caso df, luego agregamos la capa con el tipo de gráfico que haremos: **geom_point()**.
+
+Luego le tenemos que indicar qué valores queremos en cada eje. Pondremos el porcentaje de posesión en el eje X y la cantidad de ataques posicionales en el eje Y.
+
+```{r flair8, echo=FALSE}
+decorate("geom_point") %>%
+  flair("aes(x=possession_percent, y=positional_attacks)")
+```
+
+
+```{r geom_point, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df) +
+  geom_point(aes(x=possession_percent, y=positional_attacks))
+```
+
+Hay una tendencia. Los equipos que tuvieron menos del 40% de posesión suelen tener menos ataques posicionales, mientras que a medida que crece la posesión también lo hacen los ataques.
+
+Si queremos podemos ponerle un color a cada punto. Probemos "pintando" según ese equipo ganó, perdió o empató que tenemos en la columna "rdo".
+
+```{r flair9, echo=FALSE}
+decorate("color") %>%
+  flair("color=rdo")
+```
+
+```{r color, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df) +
+  geom_point(aes(x=possession_percent, y=positional_attacks, color=rdo))
+```
+
+No hay algo claro aca. Los colores parecen distribuirse aleatoriamente sin importar la cantidad de ataques o el porcentaje de posesión.
+
+Pero sigamos. ¿Más posesión es más goles?
+Hagamos el mismo gráfico pero reemplazando los ataques posicionales por la cantidad de goles marcados.
+
+```{r flair10, echo=FALSE}
+decorate("goles") %>%
+  flair(" y=goals")
+```
+
+```{r goles, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df) +
+  geom_point(aes(x=possession_percent, y=goals))
+```
+
+A medida que subimos en el eje Y (goles) los puntos tienden a concentrarse cada vez más hacia la derecha, o sea a más posesión más goles. Aclaración: No estamos explicando una relación causal (qué genera qué) sino la relación entre 2 variables.
+
+De todos modos no hay una tendencia clara hasta superar los 5 goles! O sea que mientras el partido esta parejo no es concluyente que la cantidad de goles y la posesión tengan una relación clara.
+
+Pero qué pasa con el resultado final. Es decir, ¿los equipos que ganan suelen tener más posesión?
+
+```{r flair11, echo=FALSE}
+decorate("resultado") %>%
+  flair("y=rdo, color=rdo")
+```
+
+```{r resultado, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df) +
+  geom_point(aes(x=possession_percent, y=rdo, color=rdo))
+```
+
+
+Hay equipos que perdieron teniendo posesiones altísimas y equipos que ganaron con posesiones bajas.
+Ahora bien, todos los puntos están uno encima del otro, lo cual nos impide saber si se suelen concentrar más en posesiones altas o bajas...
+
+Pero podemos agregar una nueva capa al gráfico que nos muestre la concentración de puntos de un modo más preciso. A estos gráficos se les llama **box_plot()**. 
+
+
+Atención aca: Si queremos sumar algo de los datos, lo incorporamos adentro del aes(). Si queremos setear parámtros al gráfico lo ponemos fuera del aes().
+```{r flair12, echo=FALSE}
+decorate("boxplot") %>%
+  flair("  geom_boxplot(aes(group=rdo, fill=rdo), alpha=0.8, size=2.5)")
+```
+
+```{r boxplot, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df,aes(x=possession_percent, y=rdo, color=rdo)) +
+  geom_boxplot(aes(group=rdo, fill=rdo), alpha=0.8, size=2.5)
+```
+
+¿Cómo leemos este gráfico?
+Dentro de cada una de las cajas se encuentra el 50% de los puntos está dentro de los puntos. La línea del medio indica el promedio para cada categoría, en este caso el resultado.
+
+Prácticamente no hay diferencia entre los equipos que ganaron, perdieron o empataron en cuanto a la posesión. En promedio los 3 casos rondaron el 50%.
+
+Para cerrar, agregamos títulos y fuente y listo!
+```{r flair13, echo=FALSE}
+decorate("boxplot2") %>%
+  flair("labs(title = 'Posesión de pelota por tipo de resultado',
+       x='Porcentaje de posesión',
+       y='Resultado',
+       caption = 'Fuente: Wyscout')")
+```
+
+
+```{r boxplot2, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df,aes(x=possession_percent, y=rdo, color=rdo)) +
+  geom_boxplot(aes(group=rdo, fill=rdo), alpha=0.8, size=2.5) +
+  labs(title = "Posesión de pelota por tipo de resultado",
+       x="Porcentaje de posesión",
+       y="Resultado",
+       caption = "Fuente: Wyscout")
+```
+
+
+# Bonus track
+
+Hasta ahora venimos usando estilos por defecto, pero podemos darle un aspecto diferente a los gráficos también!
+Al igual que cualquier elemento pueden cambiar el estilo agregnado una nueva capa.
+Porbamos por ejemplo con uno minimalista.
+
+```{r flair14, echo=FALSE}
+decorate("theme") %>%
+  flair("theme_minimal()")
+```
+
+
+```{r theme, echo=TRUE, message=FALSE, include=FALSE}
+ggplot(df,aes(x=possession_percent, y=rdo, color=rdo)) +
+  geom_boxplot(aes(group=rdo, fill=rdo), alpha=0.8, size=2.5) +
+  labs(title = "Posesión de pelota por tipo de resultado",
+       x="Porcentaje de posesión",
+       y="Resultado",
+       caption = "Fuente: Wyscout") +
+  theme_minimal()
+```
+
+
+Si quieren ver otros estilos pueden probar instalando la librería **ggthemes**.
+Y en [esta página](https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes/) pueden ver más estilos para usar!
+
+Si quieren profundizar en ggplot pueden ver [este tutorial](https://evamaerey.github.io/ggplot2_grammar_guide/about) muy completo, y para ver qué visualizaciones pueden hacer en R y cuál es la mejor para cada caso pueden mirar la web de [Data to Viz](https://www.data-to-viz.com/)
+
+Por último, las **cheatsheet** son siempre un recurso muy útil!
+<https://rstudio.com/resources/cheatsheets/>  
+
