@@ -1,0 +1,261 @@
+---
+title: "Introducción a R"
+subtitle: "Ciencia de Datos y Fútbol"
+author: "Martín Alalu & Ramiro Fernández"
+output: 
+  html_document:
+    fig_height: 8
+    fig_width: 12
+    #code_folding: "hide"
+    toc: true
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: paper
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Explorando R
+
+R es un lenguaje de programación __orientado a objetos__, los cuales son fundamentales para el mismo. Todo lo que se guarda en R es un objeto con un nombre específico que no permite espacios. Hay diferentes tipos de objetos: números, listas, funciones, gráficos, datos, tablas y muchos más que ya iremos viendo. Los objetos se almacenan en el ambiente (environment), los cuales pueden quedar guardados para la próxima sesión de RStudio.
+
+El operador __```<-```__ se utiliza para definir el objeto. Es un operador unidireccional, por lo cual  __A la izquierda__ del __```<-```__ debe ubicarse el nombre que tomará el elemento a crear. __Del lado derecho__ debe ir la definición del mismo. Al definir un objeto, su contenido queda guardado en el ambiente para poder ser usado de forma posterior. También se puede utilizar el operador ```=```.
+
+Para ejecutar cada línea de código, debemos ejecutarla presionando ```Ctrl``` + ```Enter```. Seleccionando varías líneas de código y utilizando el mismo comando (```Ctrl``` + ```Enter```) se irán ejecutando una por una.
+
+Si ejecuto una línea con sólo el nombre de mi objeto, el output del mismo se imprimirá en la consola. También puedo usar la función *print()*.
+
+```{r}
+ejemplo1 <- 1
+ejemplo1
+print(ejemplo1)
+```
+Una vez que tenemos el objeto ```ejemplo1``` creado, podemos hacer operaciones sobre el mismo ya que está guardado.
+```{r}
+ejemplo1*3
+```
+Con esta última operación, ```ejemplo 1``` no cambia su valor a 3, solamente cambia para el output de esa línea de código. Para guardar el cambio, hay que asignar ese output a un objeto (sea ```ejemplo1``` o algún otro)
+
+Podemos usar R como calculadora empleando operaciones básicas redactandola y presionando control+enter (o clickeando en el play en caso de los archivos .rmd)
+
+```{r cars}
+8 * 5
+```
+
+# Tipos de datos
+
+Los datos pueden ser de distintas _clases_, las principales son las siguientes:
+
+- character: ```"bew"```, ```frase estándar```
+- numeric (real or decimal): ```3.5```
+- integer: ```3```
+- logical: booleanos (```TRUE```, ```FALSE```)
+- factor: opera como un character pero con ciertas categorías
+
+Con la función ```class()``` podemos consultar la clase del objeto.
+__Numeric__     
+
+```{r}
+numero <-  1
+class(numero)
+```
+
+__Character__
+```{r}
+palabra <-  "ejemplo"
+class(palabra)
+```
+
+
+__Factor__
+```{r}
+A <- factor("Nivel 1 de un factor")
+class(A)
+levels(A)
+```
+
+La diferencia entre un _character_ y un _factor_ es que el último tiene solo algunos valores permitidos (funcionan como categorías predefinidas, los podemos consultar con la funcion ```levels()```), con un orden interno que se mantiene a la hora de graficar por ejemplo.  
+
+__Logical (booleano)__
+```{r}
+estoesverdadero <- TRUE
+class(estoesverdadero)
+```
+
+Podemos generar comentarios, para documentar qué es lo que hace nuestro código y favorecer su replicabilidad y reusabilidad.
+
+
+```{r}
+#así comentamos
+
+a <- "asigno un texto a mi variable a" #también podemos generar comentarios en la misma línea de código sin afectar su ejecución
+```
+
+# Librerías / paquetes
+
+Los paquetes son colecciones de funciones, datos y documentación que son creados por usuarios y grupos de usuarios, y son de gran utilidad porque expanden enormemente las diferentes funcionalides del lenguaje, mucho más alla de lo que viene como base de R.
+
+Para instalar un paquete, usamos la función ```install.packages()```. La vamos a tener que usar una sola vez por paquete, ya que una vez instalado, si la volvemos a ejecutar lo que hace es actualizar el paquete. Luego, para cada sesión de R, si queremos usar la librería debemos convocarla al iniciar el script con la función ```library()```
+
+Vamos a ver un ejemplo instalando *tidyverse*, que es un conjunto de los paquetes más utilizados en R y tienen la ventaja de estar excelentemente documentados
+
+```{r}
+#install.packages("tidyverse")
+library(tidyverse)
+
+# Listo, ya podemos usar todas las funciones del paquete tidyverse
+```
+
+
+# Data Frames
+
+Un Data Frame es una tabla de datos, donde las columnas representan variables y las filas observaciones/registros.
+
+Seguramente resulte central en nuestro proceso de trabajo, ya que muchos de los datos que vamos a lidiar son tabulares y permiten diferentes operaciones, modelos y funciones muy útiles y diversas.
+
+Para cargar nuestro dataset, vamos a usar la función ```read_csv()``` de *tidyverse*. Vamos a cargar un archivo csv (comma separated value) que está hosteado en una web y se trata de una muestra de eventos de un partido oficial de FIFA, para más detalles, pueden ver https://github.com/metrica-sports/sample-data. Esta función tiene muchos parámetros para modificar cómo se carga la información, que se pueden consultar en la documentación de la misma.
+
+```{r}
+dataset_ejemplo <- read_csv('https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawEventsData.csv')
+```
+
+# Explorando los datos
+
+Al ya estar cargado el dataset en nuestro ambiente, puedo explorar el dataset con la función ```View()```.
+```{r}
+View(dataset_ejemplo)
+```
+
+También podemos aplicar varias funciones para explorarlo.
+
+```{r}
+# imprime las primeras 6 filas de nuestro dataset
+head(dataset_ejemplo)
+# Idem de las 6 últimas
+tail(dataset_ejemplo)
+```
+Podemos ver un resumen de sus variables
+```{r}
+summary(dataset_ejemplo)
+```
+Los nombres de sus columnas (también se puede usar ```names```, ```colnames``` aplica para matrices también, aunque names aplica para vectores)
+```{r}
+colnames(dataset_ejemplo)
+```
+Cantidad de filas y cantidad de columnas. ```length``` también es muy utilizado, ya que aplica para otros tipos de objetos. En el caso de los dataframes, es igual a contar la cantidad de columnas.
+```{r}
+nrow(dataset_ejemplo)
+ncol(dataset_ejemplo)
+length(dataset_ejemplo)
+```
+La función ```unique()``` nos devuelve un vector con valores únicos desduplicados.
+```{r}
+unique(dataset_ejemplo$Team)
+```
+La función ```table()``` devuelve una tabla de frecuencias absolutas con la cantidad de registros por categoría para la variable.
+```{r}
+tabla <- table(dataset_ejemplo$Team)
+tabla
+```
+
+Con ```prop.table``` vemos la tabla de frecuencias relativa, la usamos con el objeto ```tabla``` creado más arriba
+```{r}
+prop.table(tabla)
+```
+Puedo hacer una tabla bi-variada también
+```{r}
+table(dataset_ejemplo$Team, dataset_ejemplo$Type)
+```
+También obtener la media, o cualquier otra función estadística
+```{r}
+mean(dataset_ejemplo$Period, na.rm = TRUE)
+```
+
+O sumar una columna numérica
+
+```{r}
+sum(dataset_ejemplo$`Start Frame`)
+```
+
+Cabe destacar que estuvimos usando principalmente funciones base de R (porque no implican instalar paquetes adicionales), seguramente a medida que vayan explorando el lengüaje van a encontrar las que prefieran. Aquí, para ejemplificar, un par de alternativas a ```summary()```
+
+```{r}
+#install.packages("Hmisc")
+library(Hmisc)
+Hmisc::describe(dataset_ejemplo)
+```
+
+# Elementos de un dataframe
+
+Se puede acceder a los elementos de un __dataframe__ con ```[ ]```, en el cual se accede a sus elementos de la forma __```[fila, columna]```__.
+
+Otra opción es especificar la columna, mediante el operador ```$```, y luego seleccionar el registro deseado. Este operador nos servirá siempre para convocar a las variables del dataset por su nombre.
+
+```{r}
+dataset_ejemplo[4,2] # estamos consultando el valor de la 2da columna para la 4ta fila
+dataset_ejemplo$Type[4] # otra forma de acceder al mismo dato
+```
+Si ya estamos llamando a una variable con el operador ```$```, debemos sólo acceder a la posición del registro que estamos buscando.
+
+Acceder a los __dataframes__ mediante  ```[ ]``` puede utilizarse para realizar filtros sobre la base, poniendo una condición para las filas. Por ejemplo, puedo utilizar los  ```[ ]``` para conservar del __dataframe__ ```dataset_ejemplo ```  unicamente los registros de los equipos locales. Al no indicar ninguna columna en particular, estamos trayendo todas las columnas.
+
+```{r error=TRUE}
+dataset_ejemplo[dataset_ejemplo$Team=="Home",]
+
+# Como vimos anteriormente, puedo usar este filtro y guardar la información en un nuevo objeto.
+
+dataset_locales <- dataset_ejemplo[dataset_ejemplo$Team=="Home",]
+```
+
+Otro ejemplo de subsetar nuestro dataset.
+```{r}
+# Nos quedamos con los registros de equipos locales y que indiquen pérdidas del balón. Usamos el operador & para incluir las dos condiciones.
+
+#el primer parámetro es el dataset "dataset_ejemplo" y después la condición por la cual la subseteo
+perdidas_equipos_locales <- subset(dataset_ejemplo, (dataset_ejemplo$Team=='Home')&(dataset_ejemplo$Type=='BALL LOST'))
+head(perdidas_equipos_locales)
+```
+
+# Directorios de trabajo
+
+Para trabajar con archivos que tenemos en nuestra PC, tanto para leerlos desde R o como generar nuevos archivos desde R, podemos usar los directorios completos de nuestra PC, pero también podemos setear un directorio predeterminado con la función ```setwd()```. Podemos consultar cuál es nuestro directorio actual con ```getwd()```
+
+```{r error=TRUE}
+#consultamos directorio de trabajo
+getwd()
+
+#seteamos un directorio de trabajo
+setwd('E:/alguna-carpeta')
+```
+
+# Lectura y escritura de archivos
+
+Ya vimos cómo leer un csv, para otros tipos de archivo tabulares (excels, o txt), la estructura es similar, lo único que se modifican son las funciones a utilizar.
+
+Hay muchas funciones para levantar archivos tabulars (sea csv, excel, txt u otro), sobre todo cambian estos parámetros: el delimitador (lo que separa cada columna), el encabezado y el separador decimal.
+
+```{r}
+# Recordamos como levantar un archivo (el mismo de antes)
+dataset_ejemplo <- read_csv('https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawEventsData.csv')
+```
+
+Vimos la función ```read_csv``` (pero podría ser ```read.table```, ```read.csv```, ```fread```, ```read.delim```, en general cambian sus parámetros default, hay algunas más óptimas que otras, aunque la mayoría *no* son de R Base). Antes pasamos como parámetro de ubicación una URL, pero puede ser la ubicación de un archivo en la pc local.
+
+Ahora vamos a ver cómo escribir un archivo en la pc. Puedo guardar uno de los objetos que creamos en mi PC local con ```write.csv()``` con los parámetros: objeto a guardar, nombre (y ubicación, aquí por default se me guardará en mi directorio predeterminado) y la última opción evita que R guarde el índice de las filas
+```{r}
+# Como no estamos indicando ningún directorio, va a guardarlo en el directorio predeterminado (el que indicamos con setwd()). Recordemos que estamos guardando uno de los objetos creados más arriba, el relativo a las perdidas de balón de equipos locales
+write.csv(perdidas_equipos_locales, "perdidas-equipos-locales.csv", row.names = FALSE)
+```
+
+# Tipos de archivos de R
+
+- __Script__: Es un archivo de texto plano, donde podemos poner el código que utilizamos para preservarlo y poder seguir trabajándolo o ejecutarlo.
+- __RMarkdown__: También sirve para guardar el código, pero a diferencia de los scripts, se puede compilar (y exportar en diferentes formatos), e intercalar código con resultados (esto es un rmarkdown). ___RNotebook___ es un tipo de formato muy similar, con otras opciones para generar outputs.
+- __Rproject__: Es un archivo que define la metadata del proyecto y nos permite tener un ambiente "independiente" para nuestro proyecto.
+- __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. Sirven para cargar data rápidamente. Cada vez que cerramos una sesión, RStudio nos ofrece guardar los objetos guardados en nuestro ambiente en un archivo RData.
