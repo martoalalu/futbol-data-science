@@ -140,12 +140,12 @@ Recomendamos leer toda la [documentación de dplyr](https://www.rdocumentation.o
 
 ## Operador "pipe": ```%>%```
 
-El operador _pipe_ relaciona entidades, toma lo referenciado a la izquierda del operador y lo transforma con los comandos de la derecha. El principal beneficio de este operador es hacer el código mucho más simple y fácil de interpretar. También nos ahorra de crear muchos objetos que no vamos a volver a utilizar. Todas las funciones que vimos anteriormente se suelen utilizar encadenadas con pipes, el cual se expresa con el operador ```%>%```. Por ejemplo, en el siguiente código llamamos al dataframe, filtramos por el mes "01", agrupamos por ```autopista_nombre```, usamos ````summarise()``` para hacer una suma de la variable ```cantidad``` (que se va a hacer sobre los grupos realizados en el ```group_by```), para luego ordenarlo de forma descendiente y mostrar las primeras 5 filas con ```head()``` 
+El operador _pipe_ relaciona entidades, toma lo referenciado a la izquierda del operador y lo transforma con los comandos de la derecha. El principal beneficio de este operador es hacer el código mucho más simple y fácil de interpretar. También nos ahorra de crear muchos objetos que no vamos a volver a utilizar. Todas las funciones que vimos anteriormente se suelen utilizar encadenadas con pipes, el cual se expresa con el operador ```%>%```. Por ejemplo, en el siguiente código llamamos al dataframe, filtramos por las transferencias entrantes (```transfer_movement``` indicando "in"), agrupamos por ```club```, usamos ````summarise()``` para hacer un recuento de la cantidad de transferencias, para luego ordenarlo de forma descendiente por la cantidad de transferencias y mostrar las primeras 5 filas con ```head()``` 
 ```{r}
-radares %>% 
-    filter(mes == '01') %>% 
-    group_by(autopista_nombre) %>% 
-    summarise(total = sum(cantidad)) %>% 
+transferencias_espania_2019 %>% 
+    filter(transfer_movement == 'in') %>% 
+    group_by(club_name) %>% 
+    summarise(total = n()) %>% 
     arrange(desc(total)) %>% 
     head(5)
 ```
@@ -155,35 +155,38 @@ radares %>%
 Con esta función cambiamos el nombre de la columna. El primer parámetro es el nuevo nombre de la columna, y el segundo parámetro el nombre de la columna que queremos cambiar.
 
 ```{r}
-radares %>%
-  rename(nombre_autopista = autopista_nombre) %>%
+transferencias_espania_2019 %>%
+  rename(nombre_club = club_name) %>%
   head(5)
 
 #vemos que en el output cambia el nombre de la columna, pero para guardarlo, lo tenemos que asignar al objeto que teníamos.
 
-radares <- radares %>%
-  rename(nombre_autopista = autopista_nombre)
+transferencias_espania_2019 <- transferencias_espania_2019 %>%
+  rename(nombre_club = club_name)
 
 #chequeamos
-names(radares)
+names(transferencias_espania_2019)
 ```
+
 ### case_when()
-Esta función nos permite crear una variable definiendo una condición en base a los valores de las columnas preestablecidas. Sino se cumple la condición, la variable toma valor _NA_. Los parámetros que toma la función son las distintas condiciones. En este caso creamos una variable indicando el trimestre del registro, la variable que se crea puede tener una combinación usando otras variables (por ejemplo operadores aritméticos sobre la variable ```cantidad```)
+Esta función nos permite crear una variable definiendo una condición en base a los valores de las columnas preestablecidas. Sino se cumple la condición, la variable toma valor _NA_. Los parámetros que toma la función son las distintas condiciones. En este caso creamos una variable indicando la posición general del jugador usando alternativas de cómo se nombran en el dataset original
+
 ```{r}
-radares <- radares %>% 
-  mutate(variable_creada = case_when((mes == "01")|(mes == "02")|(mes == "03")   ~ '1er-trimestre',
-                                 (mes == "04")|(mes == "05")|(mes == "06")   ~ '2do-trimestre',
-                                 (mes == "07")|(mes == "08")|(mes == "09")   ~ '3er-trimestre',
-                                 (mes == "10")|(mes == "11")|(mes == "12")   ~ '4to-trimestre'))
-head(radares)
+transferencias_espania_2019 <- transferencias_espania_2019 %>% 
+  mutate(posicion_generica = case_when((position == "Goalkeeper")  ~ 'Arquero',
+        (position == "Left-Back")|(position == "Right-Back")|(position == "Centre-Back")   ~ 'Defensor',
+        (position == "Central Midfield")|(position == "Defensive Midfield")|(position == "Attacking Midfield")|(position == "Left Midfield")   ~ 'Mediocampista',
+        (position == "Centre-Forward")|(position == "Left Winger")|(position == "Right Winger")|(position == "Second Striker")   ~ 'Delantero'))
+head(transferencias_espania_2019)
 ```
+
 ## Joins
 
 Los joins son parte fundamental en el manejo de bases de datos. Consiste en cruzar diferentes tablas (también hay joins "espaciales", que exceden el scope de esta unidad) mediante una variable que tengan en común (de cualquier tipo de valor), en general se aplican sobre las columnas de id. Como ya vimos para otras funciones, hay múltiples formas de generar joins. En los joins generalmente hay que pasar dos parámetros obligatorios: qué columna se va a usar para unir los dos dataframes y el tipo de join que se aplica, en el caso del paquete ```dplyr```, hay una función como el tipo de join que se utiliza, como se ve en la imagen: 
 
 
 ![](img/joins-dplyr.png)
-Vamos a crear un dataframe ficticio con la longitud de las autopistas para joinearlo con nuestro dataset de ```radares``` con el que venimos trabajando. Luego lo vamos a joinear con radares, utilizando radares como dataframe "left".
+Vamos a importar un dataframe la cantidad de jugadores usados por cada club en la temporada 2018/2019 para joinearlo con nuestro dataset de ```transferencias```, vamos a utilizar transferencias como dataframe "left", al cual le vamos a sumar la información del nuevo dataset importado.
 
 ```{r}
 longitud_autopistas <- data.frame(nombre_autopista = c("AU 4  Lugones","AU 5 Cantilo","AU 9 de Julio Sur", "AU Dellepiane"),
