@@ -189,12 +189,12 @@ Los joins son parte fundamental en el manejo de bases de datos. Consiste en cruz
 Vamos a importar un dataframe la cantidad de jugadores usados por cada club en la temporada 2018/2019 para joinearlo con nuestro dataset de ```transferencias```, vamos a utilizar transferencias como dataframe "left", al cual le vamos a sumar la información del nuevo dataset importado.
 
 ```{r}
-longitud_autopistas <- data.frame(nombre_autopista = c("AU 4  Lugones","AU 5 Cantilo","AU 9 de Julio Sur", "AU Dellepiane"),
-                            longitud_kilometros = c(52,36,65.8, 19))
+jugadores_usados_espania <- read_csv('https://raw.githubusercontent.com/martoalalu/futbol-data-science/master/data/jugadores_usados_espania.csv?token=AHEEK2OLI2ENKGNCL52G5PC7FTDVO')
 
-#con el punto indico que joinee por lo anterior
-#acá, cómo se hace el left_join llamando a ambos dataframes
-#left_join(radares, longitud_autopistas, by='nombre_autopista')
+
+transferencias_completo <- left_join(transferencias_espania_2019, jugadores_usados_espania, by = "nombre_club")
+
+View(transferencias_completo)
 
 #y acá haciendolo con pipe, el "." indica que llama a lo anterior
 radares <- radares %>% 
