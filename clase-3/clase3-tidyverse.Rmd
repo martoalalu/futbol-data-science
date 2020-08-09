@@ -32,7 +32,7 @@ Para esto, primero instalamos y cargamos la librería.
 #install.packages("tidyverse")
 library(tidyverse)
 ```
-Volvemos a cargar el dataset de *radares* como hicimos en la clase anterior. Pueden reemplazar esta línea con el set de datos que quieran trabajar!
+Cargamos un dataset con las transferencias de la liga española en 2019
 ```{r}
 #evitamos usar la "ñ", ya que es un carácter especial
 transferencias_espania_2019 <- read.csv("https://raw.githubusercontent.com/ewenme/transfers/master/data/2019/spanish_primera_division.csv", header=TRUE, sep=',', dec='.', encoding = 'UTF-8')
@@ -54,7 +54,7 @@ colnames(transferencias_espania_2019)
 ```
 Hacemos la selección indicando las columnas con las que me quiero quedar
 ```{r}
-transferencia_reducido <- select(club_name, player_name, club_involved_name, fee_cleaned)
+transferencia_reducido <- select(transferencias_espania_2019, club_name, player_name, club_involved_name, fee_cleaned)
 
 head(transferencia_reducido)
 ```
@@ -75,7 +75,7 @@ transferencias_reducido <- select(transferencias_espania_2019, -year)
 Esta función nos permite filtrar los registros de nuestro dataset con una cierta condición. En la unidad anterior, vimos una función similar que es ```subset()```. Por ejemplo, si queremos seleccionar las observaciones de la autopista Lugones
 ```{r}
 transferencias_barcelona <- filter(transferencias_espania_2019, club_name=='FC Barcelona')
-head(transferencia_barcelona)
+head(transferencias_barcelona)
 ```
 Podemos usar otros operadores lógicos (el "or", expresado con ```|```) para filtrar la base
 ```{r}
@@ -88,7 +88,7 @@ Incluimos un ejemplo con otros operadores lógicos. Comentadas están otras form
 ```{r}
 transferencias_filtrado <- filter(transferencias_espania_2019, transfer_movement!='in' & fee_cleaned>1)
 #transferencias_filtrado <- filter(transferencias_espania_2019, transfer_movement!='in', fee_cleaned>1)
-#radares_filtrado <- filter(transferencias_espania_2019, !(transfer_movement=='in') & fee_cleaned>1)
+#transferencias_filtrado <- filter(transferencias_espania_2019, !(transfer_movement=='in') & fee_cleaned>1)
 
 head(transferencias_filtrado)
 ```
@@ -106,7 +106,7 @@ head(transferencias_ordenado)
 El orden predeterminado es ascendente (mayor a menor, sea número o texto en orden alfabético), sea cual sea el valor de la columna que indicamos que se ordene por. Para usar el caso contrario (descendente, de mayor a menor), debemos usar ```desc()```
 ```{r}
 transferencias_ordenado <- arrange(transferencias_espania_2019, desc(fee_cleaned))
-head(radares_ordenado)
+head(transferencias_ordenado)
 ```
 ### mutate()
 Esta función nos permite generar columnas adicionales en el dataframe utilizando la información de las columnas ya existentes u operaciones que indiquemos. Podemos usar los operadores aritméticos o funciones específicas para crear variables con ````mutate()```
@@ -185,12 +185,12 @@ head(transferencias_espania_2019)
 Los joins son parte fundamental en el manejo de bases de datos. Consiste en cruzar diferentes tablas (también hay joins "espaciales", que exceden el scope de esta unidad) mediante una variable que tengan en común (de cualquier tipo de valor), en general se aplican sobre las columnas de id. Como ya vimos para otras funciones, hay múltiples formas de generar joins. En los joins generalmente hay que pasar dos parámetros obligatorios: qué columna se va a usar para unir los dos dataframes y el tipo de join que se aplica, en el caso del paquete ```dplyr```, hay una función como el tipo de join que se utiliza, como se ve en la imagen: 
 
 
-![](img/joins-dplyr.png)
+![](/home/ramiro/Documents/GitHub/futbol-data-science/img/joins-dplyr.png)
 Vamos a importar un dataframe la cantidad de jugadores usados por cada club en la temporada 2018/2019 para joinearlo con nuestro dataset de ```transferencias```, vamos a utilizar transferencias como dataframe "left", al cual le vamos a sumar la información del nuevo dataset importado.
 
 ```{r}
-jugadores_usados_espania <- read_csv('https://raw.githubusercontent.com/martoalalu/futbol-data-science/master/data/jugadores_usados_espania.csv?token=AHEEK2PA67Z37RP3DRQEVEC7FTEHO')
-
+jugadores_usados_espania <- 
+read_csv('/home/ramiro/Documents/GitHub/futbol-data-science/data/jugadores_usados_espania.csv')
 
 transferencias_completo <- left_join(transferencias_espania_2019, jugadores_usados_espania, by = "nombre_club")
 
@@ -217,7 +217,7 @@ Cheatsheet de ```tidyr```, algunos paquetes tienen cheatsheets de este estilo qu
 
 Vamos a ver dos funciones: ````spread()``` y ```gather()```
 
-![](img/gather-spread.png)
+![](/home/ramiro/Documents/GitHub/futbol-data-science/img/gather-spread.png)
 
 
 Armamos una nueva tabla para mostrar las funciones, la misma tendra para cada posicion, las transferencias entrantes que hizo cada club
