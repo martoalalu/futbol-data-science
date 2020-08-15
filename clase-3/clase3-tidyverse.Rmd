@@ -32,11 +32,9 @@ Para esto, primero instalamos y cargamos la librería.
 #install.packages("tidyverse")
 library(tidyverse)
 ```
-<<<<<<< HEAD
 Vamos a utilizar un dataset con las transferencias de la liga española en 2019
-=======
+
 Cargamos un dataset con las transferencias de la liga española en 2019
->>>>>>> d697cd8c537a0fc7786b0d27c3765ea810b1845f
 ```{r}
 #evitamos usar la "ñ", ya que es un carácter especial
 transferencias_espania_2019 <- read.csv("https://raw.githubusercontent.com/ewenme/transfers/master/data/2019/spanish_primera_division.csv", header=TRUE, sep=',', dec='.', encoding = 'UTF-8')
@@ -132,12 +130,15 @@ agrupado <- group_by(transferencias_espania_2019, position)
 
 summarise(agrupado, promedio_posicion = mean(fee_cleaned))
 ```
+
 Se pueden agregar más columnas en el agrupamiento, por ejemplo
+
 ```{r}
 agrupado <- group_by(transferencias_espania_2019, position, club_name)
 
 summarise(agrupado, mediana_fee = median(fee_cleaned))
 ```
+
 Podemos usar muchas otras funciones dentro de ```summarise()```, como por ejemplo ```sum()``` (aplica una suma),```sd()``` (desvío estándar), ```IQR()``` (rango intercuartil), ```min()```, ```max()```, ```n()``` y ```n_distinct()```. Estos dos últimos son utilizados para contar y resultan bastante útiles.
 
 Recomendamos leer toda la [documentación de dplyr](https://www.rdocumentation.org/packages/dplyr/versions/0.7.8), o directamente la de [tidyverse](https://www.tidyverse.org/packages/) para poder explorar todas las funciones que hay en los mismos.
