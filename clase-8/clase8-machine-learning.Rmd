@@ -1,0 +1,20 @@
+---
+title: "clase3-tidyverse"
+author: "Martín Alalu & Ramiro Fernández"
+date: "26/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+CODIGO: https://github.com/Dato-Futbol/xg-model
+
+DATA: https://figshare.com/collections/Soccer_match_event_dataset/4415000/2
+
+PAPER: https://www.nature.com/articles/s41597-019-0247-7
+
+reproducir
+
+regression random forest sobre jugadores metricas del match

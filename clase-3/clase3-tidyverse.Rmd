@@ -32,7 +32,7 @@ Para esto, primero instalamos y cargamos la librería.
 #install.packages("tidyverse")
 library(tidyverse)
 ```
-Volvemos a cargar el dataset de *radares* como hicimos en la clase anterior. Pueden reemplazar esta línea con el set de datos que quieran trabajar!
+Vamos a utilizar un dataset con las transferencias de la liga española en 2019
 ```{r}
 #evitamos usar la "ñ", ya que es un carácter especial
 transferencias_espania_2019 <- read.csv("https://raw.githubusercontent.com/ewenme/transfers/master/data/2019/spanish_primera_division.csv", header=TRUE, sep=',', dec='.', encoding = 'UTF-8')
