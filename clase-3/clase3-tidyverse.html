@@ -1547,12 +1547,12 @@ div.tocify {
 <pre class="r"><code>#para instalarlo, descomentar esta línea y ejecutarla
 #install.packages(&quot;tidyverse&quot;)
 library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
 <pre><code>## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
 ## ✓ tibble  3.0.3     ✓ dplyr   1.0.0
 ## ✓ tidyr   1.1.0     ✓ stringr 1.4.0
 ## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
 <p>Cargamos un dataset con las transferencias de la liga española en 2019</p>
@@ -1572,9 +1572,9 @@ View(transferencias_espania_2019)</code></pre>
 ##  [7] &quot;transfer_movement&quot;  &quot;fee_cleaned&quot;        &quot;league_name&quot;       
 ## [10] &quot;year&quot;               &quot;season&quot;</code></pre>
 <p>Hacemos la selección indicando las columnas con las que me quiero quedar</p>
-<pre class="r"><code>transferencia_reducido &lt;- select(transferencias_espania_2019, club_name, player_name, club_involved_name, fee_cleaned)
+<pre class="r"><code>transferencias_reducido &lt;- select(transferencias_espania_2019, club_name, player_name, club_involved_name, fee_cleaned)
 
-head(transferencia_reducido)</code></pre>
+head(transferencias_reducido)</code></pre>
 <pre><code>##      club_name        player_name club_involved_name fee_cleaned
 ## 1 FC Barcelona  Antoine Griezmann    Atlético Madrid       108.0
 ## 2 FC Barcelona    Frenkie de Jong               Ajax        67.5
@@ -1594,11 +1594,26 @@ head(transferencias_reducido)</code></pre>
 ## 5 FC Barcelona       Júnior Firpo  22        Left-Back         Real Betis
 ## 6 FC Barcelona            Emerson  20       Right-Back        Atlético-MG</code></pre>
 <p>La selección puede realizarse para excluir una variable</p>
-<pre class="r"><code>transferencias_reducido &lt;- select(transferencias_espania_2019, -year)</code></pre>
+<pre class="r"><code>transferencias_reducido &lt;- select(transferencias_espania_2019, -year)
+head(transferencias_reducido)</code></pre>
+<pre><code>##      club_name        player_name age         position club_involved_name
+## 1 FC Barcelona  Antoine Griezmann  28   Second Striker    Atlético Madrid
+## 2 FC Barcelona    Frenkie de Jong  22 Central Midfield               Ajax
+## 3 FC Barcelona               Neto  29       Goalkeeper           Valencia
+## 4 FC Barcelona Martin Braithwaite  28   Centre-Forward         CD Leganés
+## 5 FC Barcelona       Júnior Firpo  22        Left-Back         Real Betis
+## 6 FC Barcelona            Emerson  20       Right-Back        Atlético-MG
+##        fee transfer_movement fee_cleaned      league_name    season
+## 1 £108.00m                in       108.0 Primera Division 2019/2020
+## 2  £67.50m                in        67.5 Primera Division 2019/2020
+## 3  £23.40m                in        23.4 Primera Division 2019/2020
+## 4  £16.20m                in        16.2 Primera Division 2019/2020
+## 5  £16.20m                in        16.2 Primera Division 2019/2020
+## 6  £10.80m                in        10.8 Primera Division 2019/2020</code></pre>
 </div>
 <div id="filter" class="section level3">
 <h3><span class="header-section-number">1.1.2</span> filter()</h3>
-<p>Esta función nos permite filtrar los registros de nuestro dataset con una cierta condición. En la unidad anterior, vimos una función similar que es <code>subset()</code>. Por ejemplo, si queremos seleccionar las observaciones de la autopista Lugones</p>
+<p>Esta función nos permite filtrar los registros de nuestro dataset con una cierta condición. En la unidad anterior, vimos una función similar que es <code>subset()</code>. Por ejemplo, si queremos seleccionar las transferencias del Barcelona</p>
 <pre class="r"><code>transferencias_barcelona &lt;- filter(transferencias_espania_2019, club_name==&#39;FC Barcelona&#39;)
 head(transferencias_barcelona)</code></pre>
 <pre><code>##      club_name        player_name age         position club_involved_name
@@ -1711,7 +1726,7 @@ head(transferencias_ordenado)</code></pre>
 ## 4 2019/2020
 ## 5 2019/2020
 ## 6 2019/2020</code></pre>
-<p>El orden predeterminado es ascendente (mayor a menor, sea número o texto en orden alfabético), sea cual sea el valor de la columna que indicamos que se ordene por. Para usar el caso contrario (descendente, de mayor a menor), debemos usar <code>desc()</code></p>
+<p>El orden predeterminado es ascendente (menor a mayor, sea número o texto en orden alfabético), sea cual sea el valor de la columna que indicamos que se ordene por. Para usar el caso contrario (descendente, de mayor a menor), debemos usar <code>desc()</code></p>
 <pre class="r"><code>transferencias_ordenado &lt;- arrange(transferencias_espania_2019, desc(fee_cleaned))
 head(transferencias_ordenado)</code></pre>
 <pre><code>##         club_name       player_name age         position club_involved_name
@@ -1733,7 +1748,7 @@ head(transferencias_ordenado)</code></pre>
 <h3><span class="header-section-number">1.1.4</span> mutate()</h3>
 <p>Esta función nos permite generar columnas adicionales en el dataframe utilizando la información de las columnas ya existentes u operaciones que indiquemos. Podemos usar los operadores aritméticos o funciones específicas para crear variables con `<code>mutate()</code></p>
 <pre class="r"><code>transferencias_espania_2019 &lt;- mutate(transferencias_espania_2019,
-                             club_origen_destino = paste0(club_name, &quot;_&quot;, club_involved_name))
+                             club_origen_destino = paste0(club_involved_name, &quot;_&quot;, club_name))
                                 
 head(transferencias_espania_2019)</code></pre>
 <pre><code>##      club_name        player_name age         position club_involved_name
@@ -1751,39 +1766,39 @@ head(transferencias_espania_2019)</code></pre>
 ## 5  £16.20m                in        16.2 Primera Division 2019 2019/2020
 ## 6  £10.80m                in        10.8 Primera Division 2019 2019/2020
 ##            club_origen_destino
-## 1 FC Barcelona_Atlético Madrid
-## 2            FC Barcelona_Ajax
-## 3        FC Barcelona_Valencia
-## 4      FC Barcelona_CD Leganés
-## 5      FC Barcelona_Real Betis
-## 6     FC Barcelona_Atlético-MG</code></pre>
+## 1 Atlético Madrid_FC Barcelona
+## 2            Ajax_FC Barcelona
+## 3        Valencia_FC Barcelona
+## 4      CD Leganés_FC Barcelona
+## 5      Real Betis_FC Barcelona
+## 6     Atlético-MG_FC Barcelona</code></pre>
 </div>
-<div id="summarise" class="section level3">
-<h3><span class="header-section-number">1.1.5</span> summarise()</h3>
+<div id="summarise-y-group_by" class="section level3">
+<h3><span class="header-section-number">1.1.5</span> summarise() y group_by()</h3>
 <p>Esta función se suele usar con <code>group_by</code> ya que genera un output con la función que se incluya dentro, con <code>group_by</code> obtendremos una para cada grupo.<code>group_by</code> es una función clave ya que separa nuestros registros en grupos, para luego aplicarles una operación. Vamos a verlo en ejemplos.</p>
 <pre class="r"><code>#aquí solo vamos a ver la medida calculada
-summarise(transferencias_espania_2019, promedio = mean(fee_cleaned))</code></pre>
+summarise(transferencias_espania_2019, promedio = mean(fee_cleaned, na.rm = TRUE))</code></pre>
 <pre><code>##   promedio
-## 1       NA</code></pre>
+## 1 3.393147</code></pre>
 <pre class="r"><code>#acá agrupamos el dataframe por los valores únicos de &#39;autopista_nombre&#39;                                
 agrupado &lt;- group_by(transferencias_espania_2019, position)
 
-summarise(agrupado, promedio_posicion = mean(fee_cleaned))</code></pre>
+summarise(agrupado, promedio_posicion = mean(fee_cleaned, na.rm = TRUE))</code></pre>
 <pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
 <pre><code>## # A tibble: 12 x 2
 ##    position           promedio_posicion
 ##    &lt;chr&gt;                          &lt;dbl&gt;
-##  1 Attacking Midfield            NA    
-##  2 Central Midfield              NA    
-##  3 Centre-Back                   NA    
-##  4 Centre-Forward                NA    
-##  5 Defensive Midfield            NA    
-##  6 Goalkeeper                    NA    
+##  1 Attacking Midfield             3.95 
+##  2 Central Midfield               2.86 
+##  3 Centre-Back                    3.33 
+##  4 Centre-Forward                 3.54 
+##  5 Defensive Midfield             2.24 
+##  6 Goalkeeper                     3.16 
 ##  7 Left Midfield                  0.982
-##  8 Left Winger                   NA    
-##  9 Left-Back                     NA    
-## 10 Right Winger                  NA    
-## 11 Right-Back                    NA    
+##  8 Left Winger                    3.26 
+##  9 Left-Back                      2.04 
+## 10 Right Winger                   2.36 
+## 11 Right-Back                     2.12 
 ## 12 Second Striker               110.</code></pre>
 <p>Se pueden agregar más columnas en el agrupamiento, por ejemplo</p>
 <pre class="r"><code>agrupado &lt;- group_by(transferencias_espania_2019, position, club_name)
@@ -1846,11 +1861,11 @@ summarise(agrupado, mediana_fee = median(fee_cleaned))</code></pre>
 ## 4  £16.20m                in        16.2 Primera Division 2019 2019/2020
 ## 5  £16.20m                in        16.2 Primera Division 2019 2019/2020
 ##            club_origen_destino
-## 1 FC Barcelona_Atlético Madrid
-## 2            FC Barcelona_Ajax
-## 3        FC Barcelona_Valencia
-## 4      FC Barcelona_CD Leganés
-## 5      FC Barcelona_Real Betis</code></pre>
+## 1 Atlético Madrid_FC Barcelona
+## 2            Ajax_FC Barcelona
+## 3        Valencia_FC Barcelona
+## 4      CD Leganés_FC Barcelona
+## 5      Real Betis_FC Barcelona</code></pre>
 <pre class="r"><code>#vemos que en el output cambia el nombre de la columna, pero para guardarlo, lo tenemos que asignar al objeto que teníamos.
 
 transferencias_espania_2019 &lt;- transferencias_espania_2019 %&gt;%
@@ -1887,12 +1902,12 @@ head(transferencias_espania_2019)</code></pre>
 ## 5  £16.20m                in        16.2 Primera Division 2019 2019/2020
 ## 6  £10.80m                in        10.8 Primera Division 2019 2019/2020
 ##            club_origen_destino posicion_generica
-## 1 FC Barcelona_Atlético Madrid         Delantero
-## 2            FC Barcelona_Ajax     Mediocampista
-## 3        FC Barcelona_Valencia           Arquero
-## 4      FC Barcelona_CD Leganés         Delantero
-## 5      FC Barcelona_Real Betis          Defensor
-## 6     FC Barcelona_Atlético-MG          Defensor</code></pre>
+## 1 Atlético Madrid_FC Barcelona         Delantero
+## 2            Ajax_FC Barcelona     Mediocampista
+## 3        Valencia_FC Barcelona           Arquero
+## 4      CD Leganés_FC Barcelona         Delantero
+## 5      Real Betis_FC Barcelona          Defensor
+## 6     Atlético-MG_FC Barcelona          Defensor</code></pre>
 </div>
 </div>
 <div id="joins" class="section level2">
@@ -1932,12 +1947,12 @@ head(transferencias_completo)</code></pre>
 ## 5  £16.20m                in        16.2 Primera Division 2019 2019/2020
 ## 6  £10.80m                in        10.8 Primera Division 2019 2019/2020
 ##            club_origen_destino posicion_generica cantidad_managers
-## 1 FC Barcelona_Atlético Madrid         Delantero                 2
-## 2            FC Barcelona_Ajax     Mediocampista                 2
-## 3        FC Barcelona_Valencia           Arquero                 2
-## 4      FC Barcelona_CD Leganés         Delantero                 2
-## 5      FC Barcelona_Real Betis          Defensor                 2
-## 6     FC Barcelona_Atlético-MG          Defensor                 2
+## 1 Atlético Madrid_FC Barcelona         Delantero                 2
+## 2            Ajax_FC Barcelona     Mediocampista                 2
+## 3        Valencia_FC Barcelona           Arquero                 2
+## 4      CD Leganés_FC Barcelona         Delantero                 2
+## 5      Real Betis_FC Barcelona          Defensor                 2
+## 6     Atlético-MG_FC Barcelona          Defensor                 2
 ##   jugadores_nuevos_usados jugadores_usados
 ## 1                       9               28
 ## 2                       9               28
