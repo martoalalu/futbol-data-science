@@ -191,17 +191,21 @@ head(transferencias_espania_2019)
 
 ## Joins
 
-Los joins son parte fundamental en el manejo de bases de datos. Consiste en cruzar diferentes tablas (también hay joins "espaciales", que exceden el scope de esta unidad) mediante una variable que tengan en común (de cualquier tipo de valor), en general se aplican sobre las columnas de id. Como ya vimos para otras funciones, hay múltiples formas de generar joins. En los joins generalmente hay que pasar dos parámetros obligatorios: qué columna se va a usar para unir los dos dataframes y el tipo de join que se aplica, en el caso del paquete ```dplyr```, hay una función como el tipo de join que se utiliza, como se ve en la imagen: 
+Los joins son parte fundamental en el manejo de bases de datos. Consiste en cruzar diferentes tablas (también hay joins "espaciales", que exceden el scope de esta unidad) mediante una variable que tengan en común (de cualquier tipo de valor), en general se aplican sobre las columnas de id. Como ya vimos para otras funciones, hay múltiples formas de generar joins. 
 
+En los joins generalmente hay que pasar dos parámetros obligatorios: qué columna se va a usar para unir los dos dataframes y el tipo de join que se aplica, en el caso del paquete ```dplyr```, hay una función por cada tipo de join.
 
-![](/home/ramiro/Documents/GitHub/futbol-data-science/img/joins-dplyr.png)
 Vamos a importar un dataframe la cantidad de jugadores usados por cada club en la temporada 2018/2019 para joinearlo con nuestro dataset de ```transferencias```, vamos a utilizar transferencias como dataframe "left", al cual le vamos a sumar la información del nuevo dataset importado.
 
 ```{r}
 jugadores_usados_espania <- 
-read_csv('/home/ramiro/Documents/GitHub/futbol-data-science/data/jugadores_usados_espania.csv')
+read_csv('jugadores_usados_espania.csv')
+
+View(jugadores_usados_espania)
 
 transferencias_completo <- left_join(transferencias_espania_2019, jugadores_usados_espania, by = "nombre_club")
+
+head(transferencias_completo)
 
 # otra forma de hacer el join es usando el pipe, el "." indica que llama a lo anterior
 # notese que cada transferencia va a tener un dato general del club por lo cual va a estar repetido, pero nos podría ser de mucha utilidad tener ya la información allí
@@ -226,14 +230,12 @@ Cheatsheet de ```tidyr```, algunos paquetes tienen cheatsheets de este estilo qu
 
 Vamos a ver dos funciones: ````spread()``` y ```gather()```
 
-![](/home/ramiro/Documents/GitHub/futbol-data-science/img/gather-spread.png)
-
-
 Armamos una nueva tabla para mostrar las funciones, la misma tendra para cada posicion, las transferencias entrantes que hizo cada club
 ```{r}
-#la función add_tally es un atajo que crea una nueva variable que es el conteo de registros para mi operación previa (en este caso, agrupar las transferencias con su posicion_generica y nombre_club previamente filtradas)
 transferencias_posicion_club <- transferencias_espania_2019 %>%
   count(posicion_generica, nombre_club)
+
+View(transferencias_posicion_club)
 ```
 
 ### Spread
@@ -243,7 +245,7 @@ datos_spread <- transferencias_posicion_club %>%
   key = nombre_club,    #variable cuyos valores van a pasar a ser los nombres de columnas
   value = n) #los valores con los que se llenan las celdas, los que van a ser "esparcidos"
 
-datos_spread
+View(datos_spread)
 ```
 
 ### Gather
@@ -256,7 +258,7 @@ datos_gather <- datos_spread %>%
    value = total,  #variable que toma los valores de las columnas
    -1)             #le indico que columnas juntar 
 
-datos_gather
+View(datos_gather)
 ```
 
 ### bind_rows, cbind() y rbind()
