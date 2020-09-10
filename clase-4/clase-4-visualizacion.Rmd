@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Introducción
 
 
-Una de las herramientas sumamente poderosas que todo cientista de datos debe poder dominar es la de visualización de datos ya que tiene importantes ventajas no sólo en la etapa final de comunicación, sino también en la etapa de exploración y análisis también. Construir visualizaciones buenas y efectivas nos ayuda a explorar, a encontrar patrones que en una tabla nos sería díficil de hallar, a comprender diversos aspectos de la estructura subyacente en los datos, pero por sobre todas las cosas una buena forma de visualizar los datos ayuda enormemente a transmitir conceptos complejos a públicos que seguramente no estén tan acostumbrado al lenguaje propio de los datos.
+Una de las herramientas sumamente poderosas que todo cientista de datos debe poder dominar es la de visualización de datos ya que tiene importantes ventajas no sólo en la etapa final de comunicación, sino también en la etapa de exploración y análisis. Construir visualizaciones buenas y efectivas nos ayuda a explorar, a encontrar patrones que en una tabla nos sería díficil de hallar, a comprender diversos aspectos de la estructura subyacente en los datos, pero por sobre todas las cosas una buena forma de visualizar los datos ayuda enormemente a transmitir conceptos complejos a públicos que seguramente no estén tan acostumbrado al lenguaje propio de los datos.
 
 En R la librería por excelencia para hacer visualizaciones se llama **ggplot** y en esta clase aprenderemos a utilizarla y conocer todo su potencial al momento de explorar y querer comunicar los resultados de los análisis.
 
@@ -46,8 +46,7 @@ Luego cargamos los datos. En esta ocasión vamos a trabajar con un _dataset_ que
 Para leer los datos usamos **read.csv()** indicandole la ruta o el directorio donde tenemos guardado el archivo y lo guardamos como un objeto nuevo con el nombre de _df_.
 
 ```{r, echo=TRUE, message=FALSE}
-
-df <- read.csv("C:/Users/Marto/DataScience/futbol/data/df_america.csv") 
+df <- read.csv("https://raw.githubusercontent.com/martoalalu/futbol-data-science/master/data/df_clase-4.csv", encoding = 'UTF-8')
 ```
 
 Una buena práctica antes de querer hacer un gráfico o comenzar un análisis de datos es entender las principales características de los datos con los que trabajaremos.
@@ -59,7 +58,7 @@ Vamos a inspeccionar la estructura básica del archivo.
 str(df)
 ```
 
-Se trata de un _dataframe_ que tiene 37209 observaciones, o "filas" y 14 variables, o "columnas".
+Se trata de un _dataframe_ que tiene 37208 observaciones, o "filas" y 14 variables, o "columnas".
 Usaremos el comando "head" para hechar un primer vistazo a los datos y darnos una idea más concreta de qué tenemos.
 
 ```{r, echo=TRUE, message=FALSE}
@@ -120,24 +119,16 @@ Una de las columnas indicaba el país, veamos cuál es nuestro universo usando l
 unique(df$pais)
 ```
 
-Genial, tenemos partidos de todas las ligas principales de fútbol de América. Pero vemos que uno de los valores es "South America", filtremos para ver qué partidos son...
-
-```{r, echo=TRUE, message=FALSE}
-#Filtramos los prtidos que en la columna país deicen "South America" y contamos la cantidad para cada torneo
-
-head(df %>% 
-  filter(pais=="South America") %>% 
-    count(torneo)) 
-```
+Genial, tenemos partidos de todas las ligas principales de fútbol de América. Pero vemos que hay valores que dicen "South America", "N/C America" y "World". 
 
 Son partidos internacionales. Como acá lo que queremos es ver la formación más usada por país vamos a quedarnos solo con los partidos locales.
 
 ```{r, echo=TRUE, message=FALSE}
 df_pais <- df %>% 
-  filter(pais!="South America")
+  filter(pais!="South America" & pais!="N/C America" & pais!="World" )
 ```
 
-Bien. Ahora tenemos 34.222 partidos. Sigamos.
+Bien. Ahora tenemos 34.223 partidos. Sigamos.
 
 Vamos a crear una nueva tabla que va a tener para cada país una columna que indicará cuántas veces fue usada cada formación.
 
@@ -406,6 +397,7 @@ Pero podemos agregar una nueva capa al gráfico que nos muestre la concentració
 
 
 Atención aca: Si queremos sumar algo de los datos, lo incorporamos adentro del aes(). Si queremos setear parámtros al gráfico lo ponemos fuera del aes().
+
 ```{r flair12, echo=FALSE}
 decorate("boxplot") %>%
   flair("  geom_boxplot(aes(group=rdo, fill=rdo), alpha=0.8, size=2.5)")
