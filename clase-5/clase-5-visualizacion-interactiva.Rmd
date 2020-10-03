@@ -27,12 +27,33 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 
-#Create a data frame from Messi and AdamaTraore's FIFA 2018 attribute data 
-LionelMessi <- c(Pace = 96, Shooting = 97, Passing = 98, Dribbling = 99,Defending = 45,Physical = 81)
-AdamaTraore <- c(Pace = 93, Shooting = 60, Passing = 59, Dribbling = 80,Defending = 24,Physical = 70)
+jugadores <- read_csv('https://raw.githubusercontent.com/martoalalu/futbol-data-science/master/data/jugadores_superliga.csv')
 
-data <- rbind(LionelMessi, AdamaTraore)
+unique(jugadores$player)
+
+sand <- jugadores %>% filter(player=="J. Sand") %>% mutate(prop_acciones_exitosas=sum(total_actions_successful)/sum(total_actions)*100,                                                   prop_tiros_arco=sum(shots_on_target)/sum(total_shots)*100,
+acierto_pase=sum(passes_accurate)/sum(total_passes)*100,
+prop_duels_won=sum(duels_won)/sum(total_duels)*100,
+prop_def_duels_won=sum(defensive_duels_won)/sum(total_defensive_duels)*100,
+prop_att_duels_won=sum(offensive_duels_won)/sum(total_offensive_duels)*100)
+
+
+sand <- sand[1,c('prop_acciones_exitosas', 'prop_tiros_arco', 'acierto_pase', 'prop_duels_won', 'prop_def_duels_won', 'prop_att_duels_won')]
+
+
+abila <- jugadores %>% filter(player=="R. Ábila") %>% mutate(prop_acciones_exitosas=sum(total_actions_successful)/sum(total_actions)*100,                                                   prop_tiros_arco=sum(shots_on_target)/sum(total_shots)*100,
+acierto_pase=sum(passes_accurate)/sum(total_passes)*100,
+prop_duels_won=sum(duels_won)/sum(total_duels)*100,
+prop_def_duels_won=sum(defensive_duels_won)/sum(total_defensive_duels)*100,
+prop_att_duels_won=sum(offensive_duels_won)/sum(total_offensive_duels)*100)
+
+abila <- abila[1,c('prop_acciones_exitosas', 'prop_tiros_arco', 'acierto_pase', 'prop_duels_won', 'prop_def_duels_won', 'prop_att_duels_won')]
+
+data <- rbind(sand, abila)
 data
+
+row.names(data) <- c('José Sand', 'Ramon Ábila')
+data <- as.matrix(data)
 
 #Guardo mis nombres de atributos y su extensión
 Attributes = colnames(data)
@@ -186,7 +207,7 @@ annotate("text", x = ValuePositioning$x , y = ValuePositioning$y, label = ValueP
 geom_polygon(data = player1, aes(x=x,y=y),fill = "#A30845", colour = "#A30845", alpha = 0.3) + geom_point(data = player1, aes(x = x, y = y),size=0.3, colour= "#A30845") + 
 ## Agrego título
 annotate("text", x = -110 , y = 130, label = Player1_title, size= 5, colour = "#A30845", family = "Helvetica", fontface = "bold", hjust = 0) + 
-annotate("text", x = 110 , y = 130, label = "FIFA 18 Data", size= 4, colour = "#969696", family = "Helvetica", fontface = "bold", hjust = 1)
+annotate("text", x = 110 , y = 130, label = "Superliga Argentina Data", size= 4, colour = "#969696", family = "Helvetica", fontface = "bold", hjust = 1)
 
 
 ## Creo string de título para el jugador 2
@@ -194,7 +215,7 @@ Player2_title <- gsub('([[:upper:]])', ' \\1', playersDB[2])
 Player2_title <- trimws(Player2_title)
 
 ## Agrego el background
-ggplot() + xlim(c(-120, 120)) + ylim(c(-120, 150)) + 
+p <- ggplot() + xlim(c(-120, 120)) + ylim(c(-120, 150)) + 
 ## Agrego círculos
 geom_polygon(data = circle1, aes(x=x,y=y),fill = "#F0F0F0", colour = "#969696") + geom_polygon(data = circle2, aes(x=x,y=y),fill = "#FFFFFF", colour = "#d9d9d9") + geom_polygon(data = circle3, aes(x=x,y=y),fill = "#F0F0F0", colour = "#d9d9d9") + geom_polygon(data = circle4, aes(x=x,y=y),fill = "#FFFFFF", colour = "#d9d9d9") +
 ## Cambio el tema a vacío (remuevo el default)
@@ -207,12 +228,24 @@ annotate("text", x = ValuePositioning$x , y = ValuePositioning$y, label = ValueP
 geom_polygon(data = player1, aes(x=x,y=y),fill = "#A30845", colour = "#A30845", alpha = 0.3) + geom_point(data = player1, aes(x = x, y = y),size=0.3, colour= "#A30845") + 
 ## Agrego título
 annotate("text", x = -110 , y = 130, label = Player1_title, size= 5, colour = "#A30845", family = "Helvetica", fontface = "bold", hjust = 0) + 
-annotate("text", x = 110 , y = 130, label = "FIFA 18 Data", size= 4, colour = "#969696", family = "Helvetica", fontface = "bold", hjust = 1) +
+annotate("text", x = 110 , y = 130, label = "Superliga Argentina Data", size= 4, colour = "#969696", family = "Helvetica", fontface = "bold", hjust = 1) +
 ## Agrego la data del jugador 2
 geom_polygon(data = player2, aes(x=x,y=y),fill = "#00B20B", colour = "#00B20B", alpha = 0.3) +
 geom_point(data = player2, aes(x = x, y = y),size=0.3, colour= "#00B20B") +
 ## Agrego títulos de jugador 2
 annotate("text", x = -110 , y = 116, label = Player2_title, size= 5, colour = "#00B20B", family = "Helvetica", fontface = "bold", hjust = 0) + 
 annotate("text", x = -110 , y = 123 , label = "vrs", size= 3, colour = "#969696", family = "Helvetica", hjust = 0)
+
+p
+
+library(plotly)
+
+ggplotly(p)
+
 ```
+
+
+
+
+
 
