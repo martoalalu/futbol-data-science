@@ -39,6 +39,7 @@ print(ejemplo1)
 Una vez que tenemos el objeto ```ejemplo1``` creado, podemos hacer operaciones sobre el mismo ya que está guardado.
 ```{r}
 ejemplo1*3
+ejemplo1 <- ejemplo1*3
 ```
 Con esta última operación, ```ejemplo 1``` no cambia su valor a 3, solamente cambia para el output de esa línea de código. Para guardar el cambio, hay que asignar ese output a un objeto (sea ```ejemplo1``` o algún otro)
 
@@ -53,7 +54,7 @@ Podemos usar R como calculadora empleando operaciones básicas redactandola y pr
 Los datos pueden ser de distintas _clases_, las principales son las siguientes:
 
 - character: ```"bew"```, ```frase estándar```
-- numeric (real or decimal): ```3.5```
+- numeric (real o decimal): ```3.5```
 - integer: ```3```
 - logical: booleanos (```TRUE```, ```FALSE```)
 - factor: opera como un character pero con ciertas categorías
@@ -90,7 +91,6 @@ class(estoesverdadero)
 
 Podemos generar comentarios, para documentar qué es lo que hace nuestro código y favorecer su replicabilidad y reusabilidad.
 
-
 ```{r}
 #así comentamos
 
@@ -106,7 +106,7 @@ Para instalar un paquete, usamos la función ```install.packages()```. La vamos 
 Vamos a ver un ejemplo instalando *tidyverse*, que es un conjunto de los paquetes más utilizados en R y tienen la ventaja de estar excelentemente documentados
 
 ```{r}
-#install.packages("tidyverse")
+install.packages("tidyverse")
 library(tidyverse)
 
 # Listo, ya podemos usar todas las funciones del paquete tidyverse
@@ -136,7 +136,7 @@ También podemos aplicar varias funciones para explorarlo.
 
 ```{r}
 # imprime las primeras 6 filas de nuestro dataset
-head(dataset_ejemplo)
+head(dataset_ejemplo, 20)
 # Idem de las 6 últimas
 tail(dataset_ejemplo)
 ```
@@ -186,9 +186,10 @@ sum(dataset_ejemplo$`Start Frame`)
 Cabe destacar que estuvimos usando principalmente funciones base de R (porque no implican instalar paquetes adicionales), seguramente a medida que vayan explorando el lengüaje van a encontrar las que prefieran. Aquí, para ejemplificar, un par de alternativas a ```summary()```
 
 ```{r}
-#install.packages("Hmisc")
+install.packages("Hmisc")
 library(Hmisc)
 Hmisc::describe(dataset_ejemplo)
+glimpse(dataset_ejemplo)
 ```
 
 # Elementos de un dataframe
@@ -232,13 +233,14 @@ getwd()
 
 #seteamos un directorio de trabajo
 setwd('E:/alguna-carpeta')
+setwd('/cloud/project/carpeta_ejemplo')
 ```
 
 # Lectura y escritura de archivos
 
 Ya vimos cómo leer un csv, para otros tipos de archivo tabulares (excels, o txt), la estructura es similar, lo único que se modifican son las funciones a utilizar.
 
-Hay muchas funciones para levantar archivos tabulars (sea csv, excel, txt u otro), sobre todo cambian estos parámetros: el delimitador (lo que separa cada columna), el encabezado y el separador decimal.
+Hay muchas funciones para levantar archivos tabulares (sea csv, excel, txt u otro), sobre todo cambian estos parámetros: el delimitador (lo que separa cada columna), el encabezado y el separador decimal.
 
 ```{r}
 # Recordamos como levantar un archivo (el mismo de antes)
