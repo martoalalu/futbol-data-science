@@ -8,172 +8,129 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-
-reproducir
-
-regression random forest sobre jugadores metricas del match
-https://uc-r.github.io/random_forests
+1. Cargamos las librerías necesarias para la clase
 ```{r}
-#install.packages("rsample")
-#install.packages("randomForest")
-#install.packages("ranger")
 #install.packages("caret")
-#install.packages("h2o")
-
+#install.packages("rpart.plot")
+#install.packages("cluster")
+#install.packages("factoextra")
+#install.packages("NbClust")
 library(tidyverse)
-library(rsample)      # data splitting 
-library(randomForest) # basic implementation
-library(ranger)       # a faster implementation of randomForest
-library(caret)        # an aggregator package for performing many machine learning models
-library(h2o)          # an extremely fast java-based platform
-jugadores_superliga_arg <- read_csv('jugadores_superliga_argentina.csv')
+library(caret)
+library(rpart.plot)
+library(cluster)
+library(factoextra)
+library(magrittr)
+library(NbClust)
 ```
 
-Hago un breve vistazo de las variables
+### Aprendizaje basado en Árboles de Decisión
+
+Vamos a ver una implementación de modelos árboles de decisión, englobado una categoría más amplia denominada ```Classification and Regression Trees``` (CART). En particular vamos a ver un algoritmo llamado Recursive Partitioning and Regression Trees o RPART.
+
+Para aplicar RPART, vamos a usar el paquete ````caret```, que incluye varios modelos de aprendizaje automático y formas de acondicionar los datos para aplicar dichos modelos. [Aquí](http://topepo.github.io/caret/index.html) hay un muy buen bookdown que repasa muchas de las *funcionalidades* de ```caret```.
+
+2. Cargamos los datos
 ```{r}
-glimpse(jugadores_superliga_arg)
-```
+jugadores <- read.csv("C:/Users/Usuario/Documents/GitHub/futbol-data-science/clase-8/jugadores_superliga_argentina.csv", sep = ',', header = TRUE, encoding = 'UTF-8')
+glimpse(jugadores)
+unique(jugadores$position)
+jugadores$es_CF <- ifelse(grepl("CF",jugadores$position), "si", "no")
+jugadores <- jugadores %>% sample_n(10000)
+jugadores <- jugadores %>% select(-short_passes_accurate, -total_short_passes, -team, -player, -match, -competition, -date, -position, -...72, -...73)
 
-```{r}
-set.seed(123)
-jugadores_superliga_arg <- jugadores_superliga_arg[, colSums(is.na(jugadores_superliga_arg)) == 0]
-jugadores_split <- initial_split(jugadores_superliga_arg, prop = .7)
-jugadores_train <- training(jugadores_split)
-jugadores_test  <- testing(jugadores_split)
-
-m1 <- randomForest(
-  formula = xg ~ .,
-  data    = jugadores_train
-)
-m1
-plot(m1)
-```
-
-```{r}
-which.min(m1$mse)
-sqrt(m1$mse[which.min(m1$mse)])
-valid_split <- initial_split(jugadores_train, .8)
-# training data
-jugadores_train_v2 <- analysis(valid_split)
-# validation data
-jugadores_valid <- assessment(valid_split)
-x_test <- jugadores_valid[setdiff(names(jugadores_valid), "xg")]
-y_test <- jugadores_valid$xg
-
-rf_oob_comp <- randomForest(
-  formula = xg ~ .,
-  data    = jugadores_train_v2,
-  xtest   = x_test,
-  ytest   = y_test
-)
-
-# extract OOB & validation errors
-oob <- sqrt(rf_oob_comp$mse)
-validation <- sqrt(rf_oob_comp$test$mse)
-
-# compare error rates
-tibble::tibble(
-  `Out of Bag Error` = oob,
-  `Test error` = validation,
-  ntrees = 1:rf_oob_comp$ntree
-) %>%
-  gather(Metric, RMSE, -ntrees) %>%
-  ggplot(aes(ntrees, RMSE, color = Metric)) +
-  geom_line() +
-  scale_y_continuous(labels = scales::dollar) +
-  xlab("Number of trees")
-
-
-# names of features
-features <- setdiff(names(jugadores_train), "xg")
-
-set.seed(123)
-
-m2 <- tuneRF(
-  x          = jugadores_train[features],
-  y          = jugadores_train$xg,
-  ntreeTry   = 500,
-  mtryStart  = 5,
-  stepFactor = 1.5,
-  improve    = 0.01,
-  trace      = FALSE      # to not show real-time progress 
-)
-
+jugadores <- na.omit(jugadores)
 
 ```
+
+Vamos a preparar los datos para el modelo, primero seteando una semilla para asegurar la replicabilidad de los resultados del modelo. La semilla genera que, aunque la data se divida de manera aleatoria, pero el método de lectura va a ser el mismo haciendo que los resultados sean los mismos si se corre el mismo modelo. También vamos a separar el dataset de forma aleatoria en un conjunto de entrenamiento y un conjunto de test.
+
+3. Seteamos semilla y generamos partición entre train y test
 
 ```{r}
-sparse_matrix <- sparse.model.matrix(response ~ .-1, data = campaign)
-
+set.seed(3033)
+#el parámetro p marca la proporción del dataset que va a estar destinada a entrenamiento. también le indicamos la variable target.
+intrain <- createDataPartition(y = jugadores$es_CF, p= 0.7, list = FALSE)
+training <- jugadores[intrain,]
+testing <- jugadores[-intrain,]
+#chequeamos como quedamor training y test
+dim(training) 
+dim(testing)
 ```
 
-CODIGO: https://github.com/Dato-Futbol/xg-model
+Caret provee una función para entrenar diferentes modelos. Primero seteamos una función llamada ````trainControl()``` donde definimos el método para controlar el entrenamiento. Con el parámetro de ```method``` indicamos el método de resampleo. En este caso usamos "repeated cross-validation". Con el parámetro ```number``` seteamos la cantidad de iteraciones de resampleo. El parámetro ```repeats``` marca la cantidad de "folds" para realizar nuestra operación.
 
-DATA: https://figshare.com/collections/Soccer_match_event_dataset/4415000/2
-
-PAPER: https://www.nature.com/articles/s41597-019-0247-7
+4. Generamos nuestra función de control en training
 
 ```{r}
-
-## Loading R packages and source the "getshots" customized own function
-source("getshots.R")
-#install.packages("jsonlite")
-#install.packages("ggsoccer")
-library(jsonlite)
-library(ggsoccer)
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
 ```
 
-## Getting processed shots data from JSON files of 5 leagues and join them (previous downloading datasets is required)
-shotsEN <- get_shots("events/events_England.json", "EN")
-shotsFR <- get_shots("events/events_France.json", "FR")
-shotsGE <- get_shots("events/events_Germany.json", "GE")
-shotsIT <- get_shots("events/events_Italy.json", "IT")
-shotsSP <- get_shots("events/events_Spain.json", "SP")
+Antes de entrenar nuestro árbol de decisión, seteamos la semilla. Al entrenar, paso la variable target ("V7"), el conjunto de datos, el método (es decir el modelo, en este caso "rpart"), los parámetros (que en este caso es una lista que contiene un split por ganancia de información), el método de control (definido como lista anteriormente).
 
-shots <- shotsEN %>%
-  bind_rows(shotsFR, shotsGE, shotsIT, shotsSP) %>%
-  mutate(is_goal2 = ifelse(is_goal == 1, T, F))
+5. Generamos el entrenamiento de RPART
 
-write_rds(shots, "all_unblocked_shots.rds")
+```{r}
+set.seed(1234)
+modelo_arbol <- train(es_CF ~., data = training, method = "rpart",
+                   parms = list(split = "information"),
+                   trControl=trctrl,
+                   tuneLength = 10)
+```
 
+6. Chequeamos el resultado del modelo
 
-# Viz 1: all unblocked shots
-ggplot(data = shots, aes(y = y_1, x = x_1)) +
-        annotate_pitch(colour = "white",
-                       fill   = "black",
-                       limits = FALSE) +
-        theme_pitch() +
-        theme(plot.background = element_rect(fill = "black"),
-              title = element_text(colour = "white")) +
-        coord_flip(xlim = c(51, 101),
-                   ylim = c(-1, 101)) +
-        geom_jitter(aes(fill = factor(is_goal2, levels = c("TRUE", "FALSE"))),
-                    alpha = 0.3, shape = 21, size = 0.8) +
-        facet_wrap(~is_goal2, nrow = 1) +
-        scale_fill_manual(values = c("red", "#00BFFF")) +
-        scale_colour_manual(values = c("red", "#00BFFF")) +
-        theme(legend.position = c(0.75, 1.12), legend.direction = "horizontal",
-              legend.text = element_text(color = "white", size = 8, face = "plain"),
-              legend.background = element_rect(fill = "black"),
-              legend.key = element_rect(fill = "black"),
-              strip.background=element_rect(fill = "black"),
-              strip.text = element_text(colour = "black"),
-              plot.title = element_text(hjust = 0.07, face = "plain"),
-              plot.subtitle = element_text(hjust = 0.07, size = 10, face = "italic"),
-              plot.caption = element_text(hjust = 0.95),
-              plot.margin = margin(1, 0.2, 0.5, 0.2, "cm")) +
-        labs(fill = "Goal?", caption = "@DatoFutbol_cl") +
-        guides(fill = guide_legend(override.aes = list(alpha = 0.8, size = 2), reverse=T)) +
-        ggtitle("Unblocked open play shots", "Top 5 European Leagues 2017-2018")
+```{r}
+modelo_arbol
+```
 
-ggsave("shots_plot.png", width = 10, height = 5)
+7. Podemos visualizar el árbol de decisión que quedó generado, como también varias características del modelo.
 
+```{r}
+#metodo usado
+modelo_arbol$method
+#modelo mejor "tuneado". Es el que el parámetro cp (complexity parameter) es menor.
+modelo_arbol$bestTune
+#ploteamos
+prp(modelo_arbol$finalModel, box.palette = "Reds", tweak = 1.2)
+```
 
+# Predicción
 
+Vamos a ver cómo el modelo entrenado predice los valores de ```test```. Cuidado! Accuracy es una medida que puede omitir sesgos enormes del modelo. Se usa a modo orientativo aquí, se puede combinar con otras medidas como la curva ROC o las que vimos en las slides (recall, f1, precision, etc.).
 
+8. Realizamos las predicciones
 
+```{r}
+#vamos a predecir la clase del primer registro de test
+testing[1,'es_CF']
+#vemos que el modelo predice bien!
+predict(modelo_arbol, newdata = testing[1,])
 
+#vamos a analizar las predicciones de todo el testing
+test_pred <- predict(dtree_fit, newdata = testing)
+testing$es_CF <- as.factor(testing$es_CF)
+confusionMatrix(test_pred, testing$es_CF)  #Chequeamos "accuracy"
+```
 
+9. También puedo probar entrenar el árbol de decisión con otro criterio de split (índice gini por ejemplo).
 
+```{r}
+set.seed(3333)
+modelo_arbol_gini <- train(es_CF ~., data = training, method = "rpart",
+                   parms = list(split = "gini"),
+                   trControl=trctrl,
+                   tuneLength = 10)
+modelo_arbol_gini
 
+prp(modelo_arbol_gini$finalModel, box.palette = "Blues", tweak = 1.2)
+
+# Predicción
+
+test_pred_gini <- predict(modelo_arbol_gini, newdata = testing)
+confusionMatrix(test_pred_gini, testing$es_CF )  #Chequear accuracy
+```
+
+Caret tiene muchísimos [modelos disponibles](https://rdrr.io/cran/caret/man/models.html) para utilizar. Lo bueno es que la estructura de preparación de datos es similar, la del paquete. Con lo cual con lo que vimos hoy, lo pueden replicar para el modelo disponible que gusten.
+
+Los outputs de modelos se imprimen en consola, para manejarlos de manera más tidy y en consonancia con *tidyverse* podemos usar [broom](https://cran.r-project.org/web/packages/broom/vignettes/broom.html) o [modelr](https://modelr.tidyverse.org/); tal como hicimos con la regresión logística la clase pasada.
